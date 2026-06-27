@@ -1,34 +1,122 @@
-# React + TypeScript + Vite
+# </> IncidentSQL
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> Resolva incidentes, um SELECT por vez.
 
-Currently, two official plugins are available:
+Plataforma gamificada de desafios SQL. MASTERs criam incidentes com cenários reais, USERs resolvem escrevendo a query correta e sobem no ranking.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![IncidentSQL](./public/assets/images/hero.webp)
 
-## React Compiler
+---
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Funcionalidades
 
-Note: This will impact Vite dev & build performances.
+- **Autenticação** — registro e login com roles `MASTER` e `USER`
+- **Incidentes** — criação com schema SQL, query de resposta e pontuação
+- **Validação de SQL** — a query do usuário é comparada com a resposta definida pelo MASTER
+- **Ranking** — placar com pontos acumulados por incidentes resolvidos
+- **Tags** — categorização de incidentes (gerenciado por MASTERs)
+- **Gestão de usuários** — MASTERs podem promover ou rebaixar qualquer usuário
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Roles
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+| Role | Permissões |
+|------|-----------|
+| `MASTER` | Criar, editar e excluir incidentes · Gerenciar tags · Gerenciar usuários |
+| `USER` | Visualizar e resolver incidentes · Ver ranking |
+
+Credencial MASTER padrão (desenvolvimento): `master@incidentsql.com` / `master123`
+
+---
+
+## Stack
+
+**Frontend**
+- React 19 + TypeScript
+- Vite + Tailwind CSS v4
+- React Router v7
+
+**Backend**
+- Python 3.11+
+- FastAPI + Uvicorn
+- Supabase (banco de dados)
+
+---
+
+## Instalação
+
+### Pré-requisitos
+
+- Node.js 20+
+- Python 3.11+
+- Conta no [Supabase](https://supabase.com) (opcional — funciona com mock em memória)
+
+### Frontend
+
+```bash
+cd support-repository
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Backend
+
+```bash
+cd support-repository-api
+pip install -r requirements.txt
+uvicorn app.main_new:app --port 3001
+```
+
+> Use `--reload` apenas em desenvolvimento. Sem ele, os dados em memória persistem enquanto o servidor estiver rodando.
+
+### Variáveis de ambiente
+
+Copie `.env.example` para `.env` e preencha:
+
+```env
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_SECRET_KEY=sua_secret_key
+PORT=3001
+```
+
+Sem as variáveis do Supabase, a API roda com dados mock em memória.
+
+---
+
+## Estrutura do projeto
+
+```
+support-repository/         # Frontend
+└── src/
+    ├── components/         # UI reutilizável (cards, modals, inputs, SQL)
+    ├── contexts/           # AuthContext, IncidentContext, ModalContext, SearchContext
+    ├── models/             # Tipos TypeScript
+    ├── pages/              # Home, Ranking, Tags, Users, Login
+    └── services/           # Chamadas à API
+
+support-repository-api/     # Backend
+└── app/
+    └── api/
+        ├── auth.py         # Registro, login, sessões
+        ├── users.py        # Gestão de roles
+        ├── incidents_new.py
+        ├── tags_new.py
+        └── ranking_new.py
+```
+
+---
+
+## Como funciona a validação de SQL
+
+Ao criar um incidente, o MASTER define uma **query de resposta correta**. Quando um USER tenta resolver, a query enviada é normalizada (lowercase, espaços colapsados, `;` removido) e comparada com a resposta esperada. Se bater, o incidente é marcado como resolvido e os pontos são creditados.
+
+---
+
+## Deploy
+
+| Serviço | Uso |
+|---------|-----|
+| [Vercel](https://vercel.com) | Frontend (grátis) |
+| [Render](https://render.com) ou [Railway](https://railway.app) | Backend (grátis/pago) |
+| [Supabase](https://supabase.com) | Banco de dados (grátis) |
