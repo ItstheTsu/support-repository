@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useIncidents } from "../contexts/IncidentContext";
-import type { IncidentDifficulty } from "../models/IncidentModel";
+import type { IncidentDifficulty, IncidentDatabase } from "../models/IncidentModel";
 import TextField from "../components/inputs/TextField";
 import TextArea from "../components/inputs/TextArea";
 import SelectDifficulty from "../components/inputs/SelectDifficulty";
@@ -11,6 +11,11 @@ import TagService from "../services/TagService";
 import type { Tag } from "../models/TagModel";
 import Button from "../components/buttons/Button";
 
+const DATABASE_OPTIONS: { value: IncidentDatabase; label: string }[] = [
+  { value: "myfront", label: "myfront" },
+  { value: "myouro", label: "myouro" },
+];
+
 export default function CreateIncident() {
   const navigate = useNavigate();
   const { createIncident } = useIncidents();
@@ -18,6 +23,7 @@ export default function CreateIncident() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [difficulty, setDifficulty] = useState<IncidentDifficulty | "all">("easy");
+  const [database, setDatabase] = useState<IncidentDatabase>("myfront");
   const [sqlSeed, setSqlSeed] = useState("");
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -42,6 +48,7 @@ export default function CreateIncident() {
         title: title.trim(),
         description: description.trim(),
         difficulty: difficulty as IncidentDifficulty,
+        database,
         tagIds,
         sqlSeed: sqlSeed.trim() || undefined,
       });
@@ -71,7 +78,24 @@ export default function CreateIncident() {
         placeholder="Descreva o cenário que o solver precisa investigar..."
       />
 
-      <SelectDifficulty label="Dificuldade" value={difficulty} onChange={setDifficulty} />
+      <div className="grid grid-cols-2 gap-4">
+        <SelectDifficulty label="Dificuldade" value={difficulty} onChange={setDifficulty} />
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-[#8B98A5]">Banco de dados</span>
+          <select
+            value={database}
+            onChange={(e) => setDatabase(e.target.value as IncidentDatabase)}
+            className="rounded-md border border-[#2A3038] bg-[#0D1117] px-3 py-2 text-sm text-[#E6EDF3] outline-none focus:border-[#5EEAD4]"
+          >
+            {DATABASE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <TextArea
         label="Schema / dados de exemplo (opcional)"
