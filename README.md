@@ -1,122 +1,54 @@
-# </> IncidentSQL
+# Base do Suporte
 
-> Resolva incidentes, um SELECT por vez.
+Interface React/TypeScript para consultar, criar e editar artigos de suporte. Este incremento propõe aproximar estes repositórios do objetivo da Base do Suporte; os arquivos anteriores implementavam IncidentSQL, um laboratório de desafios SQL.
 
-Plataforma gamificada de desafios SQL. MASTERs criam incidentes com cenários reais, USERs resolvem escrevendo a query correta e sobem no ranking.
+## O que está disponível
 
-![IncidentSQL](./public/assets/images/hero.webp)
+- Leitura, cadastro e edição de artigos sem login geral, conforme o fluxo da equipe na rede interna.
+- Busca no título, resumo, sintomas, causa, passos, validação, cuidados e tags. Ignora acentos e caixa, aceita prefixos e prioriza título/resumo.
+- Filtros por produto, categoria, seção e palavra-chave; paginação, ordenação e busca compartilhável pela URL.
+- Artigos com endereço permanente, índice de leitura, fontes públicas, atualização e conteúdo relacionado.
+- Indicação de alteração direta no banco para procedimentos N2 / Supervisor.
+- Área administrativa em `/admin`, com usuário `suporte`, sessão HttpOnly, rascunhos, publicação, lixeira e restauração.
+- Sem senha padrão ou credenciais no navegador. O hash da senha fica apenas na configuração da API.
 
----
+## Executar com a API
 
-## Funcionalidades
+Use Node.js 24 e mantenha os dois repositórios lado a lado:
 
-- **Autenticação** — registro e login com roles `MASTER` e `USER`
-- **Incidentes** — criação com schema SQL, query de resposta e pontuação
-- **Validação de SQL** — a query do usuário é comparada com a resposta definida pelo MASTER
-- **Ranking** — placar com pontos acumulados por incidentes resolvidos
-- **Tags** — categorização de incidentes (gerenciado por MASTERs)
-- **Gestão de usuários** — MASTERs podem promover ou rebaixar qualquer usuário
+```text
+projeto/
+  support-repository/
+  support-repository-api/
+```
 
----
-
-## Roles
-
-| Role | Permissões |
-|------|-----------|
-| `MASTER` | Criar, editar e excluir incidentes · Gerenciar tags · Gerenciar usuários |
-| `USER` | Visualizar e resolver incidentes · Ver ranking |
-
-Credencial MASTER padrão (desenvolvimento): `master@incidentsql.com` / `master123`
-
----
-
-## Stack
-
-**Frontend**
-- React 19 + TypeScript
-- Vite + Tailwind CSS v4
-- React Router v7
-
-**Backend**
-- Python 3.11+
-- FastAPI + Uvicorn
-- Supabase (banco de dados)
-
----
-
-## Instalação
-
-### Pré-requisitos
-
-- Node.js 20+
-- Python 3.11+
-- Conta no [Supabase](https://supabase.com) (opcional — funciona com mock em memória)
-
-### Frontend
+Compile o frontend:
 
 ```bash
-cd support-repository
-npm install
-npm run dev
+npm ci
+npm run build
 ```
 
-### Backend
+Na pasta `support-repository-api`, siga o README correspondente para configurar o acesso administrativo, executar `npm run seed` e iniciar com `npm start`. O Express serve o build e a API em **HTTP na porta 1992**. Configure `PUBLIC_ORIGIN` na API com o IP interno do servidor. Nenhuma variável secreta é necessária no frontend.
+
+Em desenvolvimento, execute a API na porta 1992 e `npm run dev` neste repositório. O Vite usa 5173 e encaminha `/api` para o Express. Para isso, deixe `NODE_ENV=development` na API.
+
+## Verificação
 
 ```bash
-cd support-repository-api
-pip install -r requirements.txt
-uvicorn app.main_new:app --port 3001
+npm test
+npm run build
+npm run lint
 ```
 
-> Use `--reload` apenas em desenvolvimento. Sem ele, os dados em memória persistem enquanto o servidor estiver rodando.
+Os oito testes de interface usam React Testing Library e jsdom. Cobrem busca/filtros, resposta atrasada, recuperação de erro, conflito de edição, rascunho administrativo, permissão do editor e renderização de texto sem interpretar HTML. A API tem testes HTTP reais independentes.
 
-### Variáveis de ambiente
+Os avisos de lint remanescentes pertencem aos contextos antigos do IncidentSQL. O novo módulo não acrescenta avisos.
 
-Copie `.env.example` para `.env` e preencha:
+## Escopo e integração
 
-```env
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_SECRET_KEY=sua_secret_key
-PORT=3001
-```
+O frontend novo está em `src/knowledge`. Os componentes antigos de IncidentSQL foram preservados no repositório, mas não fazem parte das rotas desta proposta. Não se deve combinar este frontend com a API FastAPI antiga: os contratos novos são `/api/articles`, `/api/session` e `/api/support`.
 
-Sem as variáveis do Supabase, a API roda com dados mock em memória.
+Este trabalho não migra nem substitui a Base do Suporte que já roda no computador do usuário. Antes de trocar essa instalação, é necessário identificar seus arquivos e migrar seu conteúdo. O catálogo inicial contém cinco sínteses públicas de SNGPC com fontes VSM e um rascunho de quantidade zero, ainda pendente de validação.
 
----
-
-## Estrutura do projeto
-
-```
-support-repository/         # Frontend
-└── src/
-    ├── components/         # UI reutilizável (cards, modals, inputs, SQL)
-    ├── contexts/           # AuthContext, IncidentContext, ModalContext, SearchContext
-    ├── models/             # Tipos TypeScript
-    ├── pages/              # Home, Ranking, Tags, Users, Login
-    └── services/           # Chamadas à API
-
-support-repository-api/     # Backend
-└── app/
-    └── api/
-        ├── auth.py         # Registro, login, sessões
-        ├── users.py        # Gestão de roles
-        ├── incidents_new.py
-        ├── tags_new.py
-        └── ranking_new.py
-```
-
----
-
-## Como funciona a validação de SQL
-
-Ao criar um incidente, o MASTER define uma **query de resposta correta**. Quando um USER tenta resolver, a query enviada é normalizada (lowercase, espaços colapsados, `;` removido) e comparada com a resposta esperada. Se bater, o incidente é marcado como resolvido e os pontos são creditados.
-
----
-
-## Deploy
-
-| Serviço | Uso |
-|---------|-----|
-| [Vercel](https://vercel.com) | Frontend (grátis) |
-| [Render](https://render.com) ou [Railway](https://railway.app) | Backend (grátis/pago) |
-| [Supabase](https://supabase.com) | Banco de dados (grátis) |
+Consulte [a revisão e as decisões de implementação](docs/REVISAO_BASE_DO_SUPORTE.md).
