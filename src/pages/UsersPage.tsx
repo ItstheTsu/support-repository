@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import UserService from "../services/UserService";
 import { useAuth } from "../contexts/AuthContext";
 import type { User } from "../models/UserModel";
-import Button from "../components/buttons/Button";
 
 export default function UsersPage() {
   const { user: me } = useAuth();
